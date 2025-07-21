@@ -57,6 +57,8 @@ def admin():
     init_db()
     users = list(users_collection.find({}, {"_id": 0}))
     return render_template("admin.html", users=users)
+    except Exception as e:
+        return f"DB 연결 실패: {str(e)}", 500
 
 if __name__ == '__main__':
     app.run(debug=True)
