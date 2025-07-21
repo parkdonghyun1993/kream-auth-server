@@ -3,7 +3,7 @@ services:
     name: kream-auth-server
     env: python
     plan: free
-    startCommand: "gunicorn -b 0.0.0.0:10000 server_project.server:app"
+    startCommand: "python server_project/server.py"
     envVars:
       - key: PORT
         value: 10000
