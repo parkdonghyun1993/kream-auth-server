@@ -90,4 +90,5 @@ def me():
 
 # ✅ 여기에서 외부 접속을 허용하는 host 설정 포함
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 10000))  # 환경변수 PORT 사용
+    app.run(host="0.0.0.0", port=port)
