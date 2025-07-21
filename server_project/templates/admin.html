@@ -1,27 +1,71 @@
-<!-- server_project/templates/admin.html -->
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>관리자 페이지</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f7f7f7;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: white;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #eee;
+        }
+        .actions button {
+            margin-right: 5px;
+        }
+    </style>
 </head>
 <body>
-    <h2>회원 목록</h2>
-    <table border="1">
+    <h1>가입 요청 목록</h1>
+    {% if users %}
+    <table>
         <thead>
             <tr>
                 <th>아이디</th>
-                <th>승인 여부</th>
+                <th>이메일</th>
+                <th>가입일</th>
+                <th>승인여부</th>
+                <th>조치</th>
             </tr>
         </thead>
         <tbody>
             {% for user in users %}
             <tr>
                 <td>{{ user.username }}</td>
-                <td>{{ user.approved }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.created_at }}</td>
+                <td>{{ '승인됨' if user.approved else '대기 중' }}</td>
+                <td class="actions">
+                    {% if not user.approved %}
+                    <form method="POST" action="/approve/{{ user._id }}" style="display:inline;">
+                        <button type="submit">승인</button>
+                    </form>
+                    {% endif %}
+                    <form method="POST" action="/delete/{{ user._id }}" style="display:inline;">
+                        <button type="submit">삭제</button>
+                    </form>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+        <p>현재 가입 요청이 없습니다.</p>
+    {% endif %}
 </body>
 </html>
