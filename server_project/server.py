@@ -6,7 +6,7 @@ import jwt
 import datetime
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')  # templates 경로 지정
 CORS(app)
 
 # JWT 시크릿 키
