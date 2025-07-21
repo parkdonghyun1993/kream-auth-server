@@ -3,8 +3,8 @@ services:
     name: kream-auth-server
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: "gunicorn -b 0.0.0.0:10000 server_project.server:app"
+    buildCommand: pip install -r kream-auth-server/requirements.txt
+    startCommand: "gunicorn -b 0.0.0.0:10000 kream-auth-server/server_project.server:app"
     envVars:
       - key: PORT
         value: 10000
