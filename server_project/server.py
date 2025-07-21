@@ -18,6 +18,11 @@ client = MongoClient(MONGODB_URI)
 db = client["kream-auth"]
 users_collection = db["users"]
 
+# 서버동작
+@app.route('/')
+def home():
+    return "Server is running!"
+
 # 회원가입
 @app.route("/register", methods=["POST"])
 def register():
@@ -56,6 +61,12 @@ def login():
         "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
     }, SECRET_KEY, algorithm="HS256")
     return jsonify({"token": token})
+
+# 관리자 콘솔 로그
+@app.route('/admin')
+def admin_page():
+    print("admin route hit")  # 콘솔 로그 찍히는지 확인용
+    return render_template("admin.html")
 
 # ✅ 관리자 페이지 라우팅 추가
 @app.route("/admin")
