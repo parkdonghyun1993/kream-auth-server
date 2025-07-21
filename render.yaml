@@ -9,4 +9,4 @@ services:
       - key: PORT
         value: 10000
       - key: MONGODB_URI
-        value: YOUR_MONGODB_ATLAS_URI
+        value: mongodb+srv://admin93:<db_password>@cluster0.q9jnjdu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
