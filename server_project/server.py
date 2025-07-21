@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 from flask_cors import CORS
 from pymongo import MongoClient
 import bcrypt
@@ -6,7 +6,7 @@ import jwt
 import datetime
 import os
 
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__)
 CORS(app)
 
 # JWT 시크릿 키
@@ -18,7 +18,7 @@ client = MongoClient(MONGODB_URI)
 db = client["kream-auth"]
 users_collection = db["users"]
 
-# 서버동작
+# 홈 라우트
 @app.route('/')
 def home():
     return "Server is running!"
@@ -62,9 +62,10 @@ def login():
     }, SECRET_KEY, algorithm="HS256")
     return jsonify({"token": token})
 
-# ✅ 관리자 페이지 라우팅 추가
-@app.route("/admin")
+# ✅ 관리자 페이지
+@app.route('/admin')
 def admin_page():
+    print("admin route hit")
     users = list(users_collection.find())
     return render_template("admin.html", users=users)
 
