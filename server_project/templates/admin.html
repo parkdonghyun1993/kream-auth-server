@@ -2,70 +2,77 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>관리자 페이지</title>
+    <title>Admin Page</title>
     <style>
-        body {
-            font-family: sans-serif;
-            background-color: #f7f7f7;
-            padding: 20px;
-        }
-        h1 {
-            color: #333;
-        }
         table {
             border-collapse: collapse;
-            width: 100%;
-            background-color: white;
+            width: 80%;
+            margin: 20px auto;
         }
+
         th, td {
-            border: 1px solid #ccc;
             padding: 10px;
-            text-align: left;
+            border: 1px solid #999;
+            text-align: center;
         }
-        th {
-            background-color: #eee;
+
+        button {
+            padding: 5px 10px;
+            margin: 2px;
+            cursor: pointer;
         }
-        .actions button {
-            margin-right: 5px;
+
+        .approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .rejected {
+            background-color: #f8d7da;
+            color: #721c24;
         }
     </style>
 </head>
 <body>
-    <h1>가입 요청 목록</h1>
-    {% if users %}
+    <h2 style="text-align:center;">관리자 승인 페이지</h2>
+
     <table>
         <thead>
             <tr>
-                <th>아이디</th>
-                <th>이메일</th>
-                <th>가입일</th>
-                <th>승인여부</th>
-                <th>조치</th>
+                <th>Username</th>
+                <th>승인 상태</th>
+                <th>승인/거절</th>
             </tr>
         </thead>
         <tbody>
             {% for user in users %}
             <tr>
                 <td>{{ user.username }}</td>
-                <td>{{ user.email }}</td>
-                <td>{{ user.created_at }}</td>
-                <td>{{ '승인됨' if user.approved else '대기 중' }}</td>
-                <td class="actions">
-                    {% if not user.approved %}
-                    <form method="POST" action="/approve/{{ user._id }}" style="display:inline;">
-                        <button type="submit">승인</button>
-                    </form>
+                <td>
+                    {% if user.is_approved %}
+                        승인됨
+                    {% elif user.is_approved == False %}
+                        거절됨
+                    {% else %}
+                        대기중
                     {% endif %}
-                    <form method="POST" action="/delete/{{ user._id }}" style="display:inline;">
-                        <button type="submit">삭제</button>
+                </td>
+                <td>
+                    <form action="/admin/approve" method="post" style="display:inline;">
+                        <input type="hidden" name="username" value="{{ user.username }}">
+                        <input type="hidden" name="action" value="approve">
+                        <button class="approved" type="submit">승인</button>
+                    </form>
+
+                    <form action="/admin/approve" method="post" style="display:inline;">
+                        <input type="hidden" name="username" value="{{ user.username }}">
+                        <input type="hidden" name="action" value="reject">
+                        <button class="rejected" type="submit">거절</button>
                     </form>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    {% else %}
-        <p>현재 가입 요청이 없습니다.</p>
-    {% endif %}
 </body>
 </html>
