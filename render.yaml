@@ -3,7 +3,7 @@ services:
     name: kream-auth-server
     env: python
     plan: free
-    startCommand: "python server_project/server.py"
+    startCommand: server_project/server.py
     envVars:
       - key: PORT
         value: 10000
