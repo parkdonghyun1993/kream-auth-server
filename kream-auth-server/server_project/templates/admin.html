@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 페이지</title>
+    <style>
+        table { border-collapse: collapse; width: 80%; margin: 20px auto; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        button { padding: 5px 10px; }
+    </style>
+</head>
+<body>
+    <h2 style="text-align: center;">가입한 사용자 목록</h2>
+    <table>
+        <thead>
+            <tr><th>아이디</th><th>승인 상태</th><th>조치</th></tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ '승인됨' if user.is_approved else '대기 중' }}</td>
+                <td>
+                    {% if not user.is_approved %}
+                        <button onclick="handleAction('approve', '{{ user.username }}')">승인</button>
+                    {% else %}
+                        <button onclick="handleAction('delete', '{{ user.username }}')">삭제</button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script>
+        function handleAction(action, username) {
+            fetch(`/${action}/${username}`, {
+                method: 'POST'
+            }).then(res => location.reload());
+        }
+    </script>
+</body>
+</html>
