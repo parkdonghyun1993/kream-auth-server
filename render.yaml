@@ -8,3 +8,5 @@ services:
     envVars:
       - key: PORT
         value: 10000
+      - key: MONGODB_URI
+        value: YOUR_MONGODB_ATLAS_URI
