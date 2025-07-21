@@ -46,6 +46,11 @@ def login():
             }, app.config["SECRET_KEY"], algorithm="HS256")
             return jsonify({"token": token}), 200
     return jsonify({"error": "로그인 실패"}), 401
+# 관리자 페이지
+@app.route("/admin")
+def admin_page():
+    users = list(users_collection.find())
+    return render_template("admin.html", users=users)
 
 # 관리자 페이지
 @app.route('/admin', methods=['GET'])
