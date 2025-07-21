@@ -62,12 +62,6 @@ def login():
     }, SECRET_KEY, algorithm="HS256")
     return jsonify({"token": token})
 
-# 관리자 콘솔 로그
-@app.route('/admin')
-def admin_page():
-    print("admin route hit")  # 콘솔 로그 찍히는지 확인용
-    return render_template("admin.html")
-
 # ✅ 관리자 페이지 라우팅 추가
 @app.route("/admin")
 def admin_page():
