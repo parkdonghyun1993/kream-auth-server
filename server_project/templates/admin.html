@@ -1,78 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Page</title>
+    <title>관리자 승인 페이지</title>
     <style>
-        table {
-            border-collapse: collapse;
-            width: 80%;
-            margin: 20px auto;
-        }
-
-        th, td {
-            padding: 10px;
-            border: 1px solid #999;
-            text-align: center;
-        }
-
-        button {
-            padding: 5px 10px;
-            margin: 2px;
-            cursor: pointer;
-        }
-
-        .approved {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .rejected {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
+        table { width: 80%; margin: 20px auto; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: center; border: 1px solid #ccc; }
+        button { padding: 6px 12px; margin: 2px; }
+        .approve { background-color: #b2f2bb; }
+        .reject { background-color: #ffc9c9; }
+        .extend { background-color: #b2e5f2; }
+        input[type=number] { width: 50px; }
     </style>
 </head>
 <body>
-    <h2 style="text-align:center;">관리자 승인 페이지</h2>
-
+    <h2 style="text-align:center">관리자 승인 페이지</h2>
     <table>
         <thead>
             <tr>
                 <th>Username</th>
+                <th>가입일</th>
                 <th>승인 상태</th>
                 <th>승인/거절</th>
+                <th>기간 연장</th>
             </tr>
         </thead>
-        <tbody>
-            {% for user in users %}
-            <tr>
-                <td>{{ user.username }}</td>
-                <td>
-                    {% if user.is_approved %}
-                        승인됨
-                    {% elif user.is_approved == False %}
-                        거절됨
-                    {% else %}
-                        대기중
-                    {% endif %}
-                </td>
-                <td>
-                    <form action="/admin/approve" method="post" style="display:inline;">
-                        <input type="hidden" name="username" value="{{ user.username }}">
-                        <input type="hidden" name="action" value="approve">
-                        <button class="approved" type="submit">승인</button>
-                    </form>
-
-                    <form action="/admin/approve" method="post" style="display:inline;">
-                        <input type="hidden" name="username" value="{{ user.username }}">
-                        <input type="hidden" name="action" value="reject">
-                        <button class="rejected" type="submit">거절</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
+        <tbody id="userTable"></tbody>
     </table>
+
+<script>
+// 사용자 목록 불러오기
+fetch('/admin/users')
+    .then(response => response.json())
+    .then(users => {
+        const table = document.getElementById('userTable');
+        users.forEach(user => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${user.username}</td>
+                <td>${user.created_at || '-'}</td>
+                <td>${user.approved ? `승인됨 (만료일: ${user.access_expire || '-'})` : '대기중'}</td>
+                <td>
+                    <button class="approve" onclick="approve('${user.username}')">승인</button>
+                    <button class="reject" onclick="reject('${user.username}')">거절</button>
+                </td>
+                <td>
+                    <input type="number" min="1" max="90" id="days_${user.username}" placeholder="일수">
+                    <button class="extend" onclick="extend('${user.username}')">연장</button>
+                </td>
+            `;
+            table.appendChild(tr);
+        });
+    });
+
+function approve(username) {
+    fetch(`/admin/approve/${username}`, { method: 'POST' })
+        .then(() => location.reload());
+}
+
+function reject(username) {
+    fetch(`/admin/reject/${username}`, { method: 'POST' })
+        .then(() => location.reload());
+}
+
+function extend(username) {
+    const days = document.getElementById(`days_${username}`).value;
+    if (!days || days < 1 || days > 90) {
+        alert('1~90일 범위 내로 입력해주세요.');
+        return;
+    }
+    fetch(`/admin/extend/${username}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days: parseInt(days) })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+        location.reload();
+    });
+}
+</script>
 </body>
 </html>
