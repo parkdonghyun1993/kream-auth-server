@@ -9,4 +9,5 @@ services:
       - key: PORT
         value: 10000
       - key: MONGODB_URI
-        value: mongodb+srv://admin93:<db_password>@cluster0.q9jnjdu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+        value: mongodb+srv://admin93:anwlro11@cluster0.q9jnjdu.mongodb.net/kream_auth?retryWrites=true&w=majority
+
