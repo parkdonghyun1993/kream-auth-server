@@ -9,7 +9,7 @@ app = Flask(__name__)
 CORS(app)
 
 # MongoDB 연결
-client = MongoClient("YOUR_MONGODB_URI")
+client = MongoClient(os.environ.get("MONGODB_URI"))
 db = client["kream_auth"]
 users_collection = db["users"]
 
