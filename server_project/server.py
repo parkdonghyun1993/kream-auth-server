@@ -12,6 +12,13 @@ users_collection = db["users"]
 
 KST = pytz.timezone('Asia/Seoul')
 
+@app.route('/')
+def index():
+    return "Server is running"
+
+if __name__ == '__main__':
+    app.run()
+    
 @app.route('/admin')
 def admin_page():
     return render_template('admin.html')
