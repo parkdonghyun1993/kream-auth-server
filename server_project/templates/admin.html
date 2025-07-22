@@ -1,102 +1,109 @@
-<!-- templates/admin.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>관리자 페이지</title>
+    <title>관리자 승인 페이지</title>
     <style>
-        table { width: 95%; margin: 20px auto; border-collapse: collapse; font-size: 14px; }
-        th, td { padding: 8px; text-align: center; border: 1px solid #ccc; }
-        input[type="number"], input[type="text"] { width: 80px; }
-        .btn { padding: 4px 10px; margin: 2px; }
-        .green { background: #d2f8d2; }
-        .red { background: #ffdcdc; }
-        .blue { background: #d2e9ff; }
+        table { width: 95%; margin: 20px auto; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: center; border: 1px solid #ccc; }
+        button { padding: 6px 10px; margin: 2px; }
+        input[type="number"], input[type="password"], input[type="date"] {
+            width: 90px;
+        }
     </style>
 </head>
 <body>
-    <h2 style="text-align:center;">KREAM 관리자 회원관리</h2>
+    <h2 style="text-align:center">관리자 승인 페이지</h2>
     <table>
         <thead>
             <tr>
-                <th>아이디</th>
-                <th>승인여부</th>
+                <th>Username</th>
                 <th>가입일</th>
-                <th>만료일</th>
+                <th>승인 여부</th>
+                <th>기간 정보</th>
                 <th>비밀번호 변경</th>
-                <th>기간수정</th>
-                <th>조치</th>
+                <th>사용 기간 수정</th>
+                <th>저장</th>
+                <th>승인/거절</th>
             </tr>
         </thead>
         <tbody id="userTable"></tbody>
     </table>
 
-    <script>
-        fetch("/admin/users")
-            .then(res => res.json())
-            .then(users => {
-                const tbody = document.getElementById("userTable");
-                users.forEach(user => {
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td>${user.username}</td>
-                        <td>${user.approved ? "✅ 승인" : "⏳ 대기중"}</td>
-                        <td>${user.created_at || "-"}</td>
-                        <td>${user.access_expire || "-"}</td>
-                        <td>
-                            <input type="text" id="pw_${user.username}" placeholder="새 비번">
-                            <button class="btn blue" onclick="updatePassword('${user.username}')">변경</button>
-                        </td>
-                        <td>
-                            <input type="number" id="days_${user.username}" placeholder="일수">
-                            <button class="btn green" onclick="updatePeriod('${user.username}')">적용</button>
-                        </td>
-                        <td>
-                            <button class="btn green" onclick="approve('${user.username}', 30)">승인</button>
-                            <button class="btn red" onclick="reject('${user.username}')">삭제</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            });
+<script>
+fetch('/admin/users')
+    .then(response => response.json())
+    .then(users => {
+        const table = document.getElementById('userTable');
+        users.forEach(user => {
+            const tr = document.createElement('tr');
 
-        function approve(username, days) {
-            fetch(`/admin/approve/${username}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ days })
-            }).then(() => location.reload());
-        }
+            tr.innerHTML = `
+                <td>${user.username}</td>
+                <td>${user.created_at || '-'}</td>
+                <td>${user.approved ? '승인됨' : '대기중'}</td>
+                <td>
+                    부여: ${user.access_start || '-'}<br>
+                    만료: ${user.access_expire || '-'}
+                </td>
+                <td>
+                    <input type="password" id="pw_${user.username}" placeholder="새 비번">
+                </td>
+                <td>
+                    <input type="date" id="start_${user.username}">
+                    <input type="date" id="expire_${user.username}">
+                </td>
+                <td>
+                    <button onclick="updateUser('${user.username}')">저장</button>
+                </td>
+                <td>
+                    <button onclick="approve('${user.username}')">승인</button>
+                    <button onclick="reject('${user.username}')">거절</button>
+                </td>
+            `;
 
-        function reject(username) {
-            if (!confirm(`${username} 회원을 삭제할까요?`)) return;
-            fetch(`/admin/reject/${username}`, { method: "POST" }).then(() => location.reload());
-        }
+            table.appendChild(tr);
+        });
+    });
 
-        function updatePassword(username) {
-            const pw = document.getElementById(`pw_${username}`).value;
-            if (!pw) return alert("비밀번호를 입력해주세요.");
-            fetch(`/admin/update_password/${username}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ password: pw })
-            }).then(res => res.json()).then(data => {
-                alert(data.message);
-            });
-        }
+function approve(username) {
+    fetch(`/admin/approve/${username}`, { method: 'POST' })
+        .then(() => location.reload());
+}
 
-        function updatePeriod(username) {
-            const days = parseInt(document.getElementById(`days_${username}`).value);
-            if (!days || days < 1 || days > 365) return alert("1~365일 범위로 입력해주세요.");
-            fetch(`/admin/set_period/${username}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ days })
-            }).then(res => res.json()).then(data => {
-                alert(data.message);
-                location.reload();
-            });
-        }
-    </script>
+function reject(username) {
+    fetch(`/admin/reject/${username}`, { method: 'POST' })
+        .then(() => location.reload());
+}
+
+function updateUser(username) {
+    const password = document.getElementById(`pw_${username}`).value;
+    const startDate = document.getElementById(`start_${username}`).value;
+    const expireDate = document.getElementById(`expire_${username}`).value;
+
+    const payload = {};
+    if (password) payload.password = password;
+    if (startDate && expireDate) {
+        payload.access_start = startDate;
+        payload.access_expire = expireDate;
+    }
+
+    if (Object.keys(payload).length === 0) {
+        alert("변경할 값을 입력해주세요.");
+        return;
+    }
+
+    fetch(`/admin/update/${username}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+        location.reload();
+    });
+}
+</script>
 </body>
 </html>
