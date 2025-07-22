@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from pymongo import MongoClient
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import pytz
 import os
@@ -76,3 +76,50 @@ def extend_user(username):
         }}
     )
     return jsonify({"message": f"{username} 사용 기간 {days}일 연장됨"}), 200
+
+@app.route("/register", methods=["POST"])
+def register_user():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+
+    if not username or not password:
+        return jsonify({"message": "아이디와 비밀번호는 필수입니다."}), 400
+
+    existing_user = users_collection.find_one({"username": username})
+    if existing_user:
+        return jsonify({"message": "이미 존재하는 사용자입니다."}), 409
+
+    now = datetime.now(KST)
+    hashed_pw = generate_password_hash(password)
+    users_collection.insert_one({
+        "username": username,
+        "password": hashed_pw,
+        "created_at": now,
+        "approved": False,
+    })
+    return jsonify({"message": "회원가입 신청 완료"}), 201
+
+
+@app.route("/login", methods=["POST"])
+def login_user():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+
+    user = users_collection.find_one({"username": username})
+    if not user:
+        return jsonify({"message": "사용자를 찾을 수 없습니다."}), 401
+
+    if not check_password_hash(user["password"], password):
+        return jsonify({"message": "비밀번호가 일치하지 않습니다."}), 401
+
+    if not user.get("approved", False):
+        return jsonify({"message": "관리자 승인이 필요합니다.", "access_granted": False}), 403
+
+    now = datetime.now(KST)
+    expire = user.get("access_expire")
+    if expire and now > expire:
+        return jsonify({"message": "사용 기간이 만료되었습니다.", "access_granted": False}), 403
+
+    return jsonify({"message": "로그인 성공", "access_granted": True}), 200
