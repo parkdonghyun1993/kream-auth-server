@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from pymongo import MongoClient
+from werkzeug.security import generate_password_hash
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import pytz
@@ -18,7 +19,7 @@ def index():
 
 if __name__ == '__main__':
     app.run()
-    
+
 @app.route('/admin')
 def admin_page():
     return render_template('admin.html')
