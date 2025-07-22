@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify, render_template
 from pymongo import MongoClient
-from werkzeug.security import generate_password_hash
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import pytz
@@ -17,26 +16,28 @@ KST = pytz.timezone('Asia/Seoul')
 def index():
     return "Server is running"
 
-if __name__ == '__main__':
-    app.run()
-
 @app.route('/admin')
 def admin_page():
     return render_template('admin.html')
 
 @app.route('/admin/users')
-def get_pending_users():
-    users = list(users_collection.find({"approved": {"$ne": True}}, {"_id": 0, "username": 1, "created_at": 1, "access_expire": 1, "approved": 1}))
+def get_all_users():
+    users = list(users_collection.find({}, {
+        "_id": 0, "username": 1, "created_at": 1, "access_start": 1,
+        "access_expire": 1, "approved": 1
+    }))
     for user in users:
         if user.get("created_at"):
             user["created_at"] = user["created_at"].astimezone(KST).strftime("%Y-%m-%d %H:%M:%S")
+        if user.get("access_start"):
+            user["access_start"] = user["access_start"].astimezone(KST).strftime("%Y-%m-%d")
         if user.get("access_expire"):
             user["access_expire"] = user["access_expire"].astimezone(KST).strftime("%Y-%m-%d")
     return jsonify(users)
 
 @app.route('/admin/approve/<username>', methods=['POST'])
 def approve_user(username):
-    data = request.get_json()
+    data = request.get_json() or {}
     days = int(data.get("days", 30))
     now = datetime.now(KST)
     expire = now + timedelta(days=days)
@@ -78,6 +79,28 @@ def extend_user(username):
     )
     return jsonify({"message": f"{username} 사용 기간 {days}일 연장됨"}), 200
 
+@app.route('/admin/update/<username>', methods=['POST'])
+def update_user(username):
+    data = request.get_json()
+    updates = {}
+
+    if "password" in data:
+        updates["password"] = generate_password_hash(data["password"])
+
+    try:
+        if "access_start" in data:
+            updates["access_start"] = datetime.strptime(data["access_start"], "%Y-%m-%d").replace(tzinfo=KST)
+        if "access_expire" in data:
+            updates["access_expire"] = datetime.strptime(data["access_expire"], "%Y-%m-%d").replace(tzinfo=KST)
+    except Exception as e:
+        return jsonify({"message": f"날짜 형식 오류: {str(e)}"}), 400
+
+    if not updates:
+        return jsonify({"message": "변경할 값이 없습니다."}), 400
+
+    users_collection.update_one({"username": username}, {"$set": updates})
+    return jsonify({"message": f"{username} 정보가 업데이트되었습니다."}), 200
+
 @app.route("/register", methods=["POST"])
 def register_user():
     data = request.get_json()
@@ -101,7 +124,6 @@ def register_user():
     })
     return jsonify({"message": "회원가입 신청 완료"}), 201
 
-
 @app.route("/login", methods=["POST"])
 def login_user():
     data = request.get_json()
@@ -124,3 +146,6 @@ def login_user():
         return jsonify({"message": "사용 기간이 만료되었습니다.", "access_granted": False}), 403
 
     return jsonify({"message": "로그인 성공", "access_granted": True}), 200
+
+if __name__ == '__main__':
+    app.run()
