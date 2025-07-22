@@ -67,8 +67,22 @@ fetch('/admin/users')
     });
 
 function approve(username) {
-    fetch(`/admin/approve/${username}`, { method: 'POST' })
-        .then(() => location.reload());
+    // 기본 사용기간 30일을 서버에 명시적으로 전달
+    const payload = { days: 30 };
+
+    fetch(`/admin/approve/${username}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json().catch(() => ({ message: '서버 응답 오류' })))
+    .then(data => {
+        alert(data.message || '승인 처리 완료');
+        location.reload();
+    })
+    .catch(err => {
+        alert('승인 중 오류 발생: ' + err);
+    });
 }
 
 function reject(username) {
