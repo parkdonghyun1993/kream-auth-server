@@ -142,7 +142,10 @@ def login_user():
 
     now = datetime.now(KST)
     expire = user.get("access_expire")
-    if expire and now > expire:
+    if expire:
+    if expire.tzinfo is None:
+        expire = KST.localize(expire)
+    if now > expire:
         return jsonify({"message": "사용 기간이 만료되었습니다.", "access_granted": False}), 403
 
     return jsonify({"message": "로그인 성공", "access_granted": True}), 200
