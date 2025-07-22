@@ -29,7 +29,6 @@
     </table>
 
 <script>
-// 사용자 목록 불러오기
 fetch('/admin/users')
     .then(response => response.json())
     .then(users => {
@@ -41,11 +40,12 @@ fetch('/admin/users')
                 <td>${user.created_at || '-'}</td>
                 <td>${user.approved ? `승인됨 (만료일: ${user.access_expire || '-'})` : '대기중'}</td>
                 <td>
+                    <input type="number" min="1" max="90" id="days_${user.username}" placeholder="일수">
                     <button class="approve" onclick="approve('${user.username}')">승인</button>
                     <button class="reject" onclick="reject('${user.username}')">거절</button>
                 </td>
                 <td>
-                    <input type="number" min="1" max="90" id="days_${user.username}" placeholder="일수">
+                    <input type="number" min="1" max="90" id="extend_${user.username}" placeholder="일수">
                     <button class="extend" onclick="extend('${user.username}')">연장</button>
                 </td>
             `;
@@ -54,28 +54,29 @@ fetch('/admin/users')
     });
 
 function approve(username) {
-    fetch(`/admin/approve/${username}`, { method: 'POST' })
-        .then(() => location.reload());
+    const days = document.getElementById(`days_${username}`).value || 30;
+    fetch(`/admin/approve/${username}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days: parseInt(days) })
+    }).then(() => location.reload());
 }
 
 function reject(username) {
-    fetch(`/admin/reject/${username}`, { method: 'POST' })
-        .then(() => location.reload());
+    fetch(`/admin/reject/${username}`, { method: 'POST' }).then(() => location.reload());
 }
 
 function extend(username) {
-    const days = document.getElementById(`days_${username}`).value;
+    const days = document.getElementById(`extend_${username}`).value;
     if (!days || days < 1 || days > 90) {
-        alert('1~90일 범위 내로 입력해주세요.');
+        alert('1~90일 범위로 입력하세요.');
         return;
     }
     fetch(`/admin/extend/${username}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ days: parseInt(days) })
-    })
-    .then(res => res.json())
-    .then(data => {
+    }).then(res => res.json()).then(data => {
         alert(data.message);
         location.reload();
     });
